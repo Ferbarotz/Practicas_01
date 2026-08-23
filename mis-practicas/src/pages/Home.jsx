@@ -233,6 +233,63 @@ function CalculadoraCard() {
   )
 }
 
+function RecetaFacilCard() {
+  const navigate = useNavigate()
+  const [hovered, setHovered] = useState(false)
+  const accent = '#f97316'
+
+  return (
+    <div
+      style={{
+        cursor: 'pointer',
+        background: hovered
+          ? 'linear-gradient(135deg, #1c0e00, #2c1500)'
+          : 'linear-gradient(135deg, #161b27, #1a1f30)',
+        border: `1px solid ${hovered ? accent + '66' : '#2d374877'}`,
+        boxShadow: hovered
+          ? `0 8px 32px ${accent}33, 0 0 1px ${accent}44`
+          : '0 2px 14px rgba(0,0,0,0.4)',
+        borderRadius: 16,
+        padding: '14px 16px',
+        transition: 'all 0.25s',
+        maxWidth: 340,
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        className="flex items-center gap-3"
+        onClick={() => navigate('/recetas')}
+      >
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{
+          background: hovered
+            ? `linear-gradient(135deg, ${accent}, #ea580c)`
+            : `linear-gradient(135deg, ${accent}33, #92400e33)`,
+          border: `1px solid ${accent}33`,
+          fontSize: '1.15rem',
+        }}>
+          🍳
+        </div>
+        <div className="flex-1">
+          <div className="font-sw font-bold text-xs" style={{
+            color: hovered ? accent : '#94a3b8',
+            letterSpacing: '0.12em', transition: 'color 0.2s',
+          }}>RECETA FÁCIL</div>
+          <div className="font-mono-sw text-xs mt-0.5" style={{ color: '#64748b', letterSpacing: '0.06em', fontSize: '0.6rem' }}>
+            COCINA CON LO QUE TIENES
+          </div>
+        </div>
+        <svg className="w-4 h-4 flex-shrink-0 transition-transform duration-200"
+          style={{ color: accent + '55', transform: hovered ? 'translateX(3px)' : 'translateX(0)' }}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+      <CardPrompt cardKey="recetas" accentColor={accent} />
+    </div>
+  )
+}
+
 export default function Home() {
   return (
     <div className="min-h-screen pt-16">
@@ -265,6 +322,7 @@ export default function Home() {
         <div className="flex flex-wrap gap-4">
           <CalculadoraCard />
           <F1Card />
+          <RecetaFacilCard />
         </div>
 
       </div>

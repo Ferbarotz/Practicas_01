@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Calculadora from './pages/Calculadora'
 import F1Timeline from './pages/F1Timeline'
+import RecetaFacil from './pages/RecetaFacil'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/calculadora" element={<ProtectedRoute><Calculadora /></ProtectedRoute>} />
         <Route path="/f1" element={<ProtectedRoute><F1Timeline /></ProtectedRoute>} />
+        <Route path="/recetas" element={<ProtectedRoute><RecetaFacil /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </>
