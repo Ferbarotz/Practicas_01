@@ -15,20 +15,94 @@ if (!document.head.querySelector('#receta-styles')) {
   document.head.appendChild(styleEl)
 }
 
-const ACCENT   = '#f97316'   // naranja principal
-const ACCENT2  = '#fbbf24'   // amarillo
+const ACCENT   = '#f97316'
+const ACCENT2  = '#fbbf24'
 const DARK     = '#0f0a04'
 const SURFACE  = '#1a1108'
 const SURFACE2 = '#211508'
 const BORDER   = '#2d1f0a'
 
+// ── Diccionario ES → EN para TheMealDB ───────────────────────────────────
+const ES_EN = {
+  // Carnes
+  'pollo':'chicken','pechuga':'chicken breast','muslo':'chicken thigh',
+  'ternera':'beef','carne':'beef','carne picada':'ground beef','picada':'ground beef',
+  'cerdo':'pork','lomo':'pork loin','tocino':'bacon','bacon':'bacon',
+  'cordero':'lamb','pavo':'turkey','pato':'duck','conejo':'rabbit',
+  'salchicha':'sausage','chorizo':'chorizo','jamón':'ham','jamon':'ham',
+  // Pescados y mariscos
+  'salmón':'salmon','salmon':'salmon','atún':'tuna','atun':'tuna',
+  'bacalao':'cod','merluza':'hake','sardina':'sardine','gambas':'prawns',
+  'langostinos':'prawns','camarones':'shrimp','mejillones':'mussels',
+  'calamar':'squid','pulpo':'octopus','cangrejo':'crab',
+  // Verduras
+  'tomate':'tomato','tomates':'tomato','cebolla':'onion','cebollas':'onion',
+  'ajo':'garlic','ajos':'garlic','pimiento':'pepper','pimiento rojo':'red pepper',
+  'pimiento verde':'green pepper','pimenton':'paprika','pimentón':'paprika',
+  'patata':'potato','patatas':'potato','papa':'potato','papas':'potato',
+  'zanahoria':'carrot','zanahorias':'carrot','brócoli':'broccoli','brocoli':'broccoli',
+  'espinaca':'spinach','espinacas':'spinach','lechuga':'lettuce',
+  'pepino':'cucumber','berenjena':'eggplant','calabacín':'courgette',
+  'calabacin':'courgette','maíz':'corn','maiz':'corn','guisantes':'peas',
+  'judías verdes':'green beans','judias verdes':'green beans',
+  'champiñones':'mushrooms','champiñon':'mushrooms','setas':'mushrooms',
+  'cebolleta':'spring onion','puerro':'leek','apio':'celery',
+  'remolacha':'beetroot','coliflor':'cauliflower','col':'cabbage',
+  'repollo':'cabbage','alcachofa':'artichoke','espárrago':'asparagus',
+  // Frutas
+  'manzana':'apple','naranja':'orange','limón':'lemon','limon':'lemon',
+  'lima':'lime','plátano':'banana','platano':'banana','uva':'grape',
+  'fresa':'strawberry','frambuesa':'raspberry','arándano':'blueberry',
+  'mango':'mango','piña':'pineapple','pera':'pear','melocotón':'peach',
+  'aguacate':'avocado','coco':'coconut',
+  // Lácteos y huevos
+  'huevo':'egg','huevos':'egg','leche':'milk','nata':'cream',
+  'queso':'cheese','mantequilla':'butter','yogur':'yoghurt','yogurt':'yoghurt',
+  'mozzarella':'mozzarella','parmesano':'parmesan','ricotta':'ricotta',
+  // Granos, pasta, pan
+  'arroz':'rice','pasta':'pasta','espagueti':'spaghetti','macarrones':'macaroni',
+  'pan':'bread','harina':'flour','avena':'oats','quinoa':'quinoa',
+  'lentejas':'lentils','garbanzos':'chickpeas','alubias':'kidney beans',
+  'judías':'kidney beans','fideos':'noodles',
+  // Condimentos y salsas
+  'aceite':'oil','aceite de oliva':'olive oil','vinagre':'vinegar',
+  'sal':'salt','pimienta':'pepper','azúcar':'sugar','azucar':'sugar',
+  'miel':'honey','salsa de tomate':'tomato sauce','ketchup':'ketchup',
+  'mostaza':'mustard','mayonesa':'mayonnaise','soja':'soy sauce',
+  'salsa de soja':'soy sauce','curry':'curry','comino':'cumin',
+  'canela':'cinnamon','orégano':'oregano','oregano':'oregano',
+  'albahaca':'basil','perejil':'parsley','tomillo':'thyme',
+  'romero':'rosemary','laurel':'bay leaf','jengibre':'ginger',
+  'cúrcuma':'turmeric','curcuma':'turmeric','nuez moscada':'nutmeg',
+  // Bebidas / otros
+  'vino':'wine','vino blanco':'white wine','vino tinto':'red wine',
+  'cerveza':'beer','caldo':'stock','caldo de pollo':'chicken stock',
+  'tofu':'tofu','setas shiitake':'shiitake','nuez':'walnut','nueces':'walnut',
+  'almendra':'almond','almendras':'almond','piñones':'pine nuts',
+  'pasas':'raisins','chocolate':'chocolate','cacao':'cocoa',
+}
+
+function translateIngredient(term) {
+  const lower = term.toLowerCase().trim()
+  return ES_EN[lower] || term
+}
+
 // ── Helpers API TheMealDB ─────────────────────────────────────────────────
 const BASE = 'https://www.themealdb.com/api/json/v1/1'
 
 async function fetchByIngredient(ing) {
-  const r = await fetch(`${BASE}/filter.php?i=${encodeURIComponent(ing.trim())}`)
-  const j = await r.json()
-  return j.meals || []
+  const translated = translateIngredient(ing)
+  // Intentar primero con traducción, luego con término original si es distinto
+  const terms = translated.toLowerCase() !== ing.toLowerCase()
+    ? [translated, ing]
+    : [ing]
+
+  for (const term of terms) {
+    const r = await fetch(`${BASE}/filter.php?i=${encodeURIComponent(term)}`)
+    const j = await r.json()
+    if (j.meals?.length) return j.meals
+  }
+  return []
 }
 
 async function fetchMealDetail(id) {
@@ -39,7 +113,6 @@ async function fetchMealDetail(id) {
 
 function intersectMeals(lists) {
   if (!lists.length) return []
-  // Buscar meals que aparezcan en la mayor cantidad de listas de ingredientes
   const countMap = {}
   lists.flat().forEach(m => {
     countMap[m.idMeal] = countMap[m.idMeal]
@@ -215,6 +288,32 @@ function RecipeDetail({ meal, onClose }) {
               ▶ VER EN YOUTUBE
             </a>
           )}
+
+          {/* Fuente */}
+          <div style={{
+            marginTop: 20,
+            paddingTop: 16,
+            borderTop: `1px solid ${BORDER}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8,
+          }}>
+            <span style={{ fontSize: '0.62rem', color: '#57534e' }}>
+              Fuente de datos:
+            </span>
+            <a
+              href={`https://www.themealdb.com/meal/${meal.idMeal}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                background: SURFACE2, border: `1px solid ${BORDER}`,
+                borderRadius: 8, padding: '5px 12px',
+                color: ACCENT2, fontSize: '0.65rem', fontWeight: 600,
+                textDecoration: 'none', letterSpacing: '0.08em',
+              }}
+            >
+              🌐 TheMealDB.com — Ver original
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -264,7 +363,7 @@ export default function RecetaFacil() {
       const lists = await Promise.all(ingredients.map(fetchByIngredient))
       const merged = intersectMeals(lists)
       setResults(merged)
-      if (!merged.length) setError('No encontramos recetas con esos ingredientes. Prueba con otros.')
+      if (!merged.length) setError('No encontramos recetas en TheMealDB con esos ingredientes. Prueba a escribirlos en inglés o cambia algún ingrediente.')
     } catch {
       setError('Error al conectar con la API de recetas. Comprueba tu conexión.')
     } finally {
@@ -377,7 +476,7 @@ export default function RecetaFacil() {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={ingredients.length ? 'Añadir otro ingrediente...' : 'Escribe un ingrediente (ej: pollo, tomate...)'}
+                placeholder={ingredients.length ? 'Añadir otro ingrediente...' : 'Escribe en español o inglés (ej: pollo, tomate, pasta...)'}
                 style={{
                   flex: 1, background: 'none', border: 'none', outline: 'none',
                   color: '#f1f5f9', fontSize: '0.92rem',
